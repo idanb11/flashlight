@@ -27,7 +27,6 @@ var esc = new elasticsearch.Client(escOptions);
 
 console.log('Connecting to ElasticSearch host %s:%s'.grey, conf.ES_HOST, conf.ES_PORT);
 
-
 var timeoutObj = setInterval(function() {
   esc.ping()
     .then(function() {

@@ -4,7 +4,7 @@
  * @version 0.3, 3 June 2014
  */
 
-var ElasticSearch = require('elasticsearch'),
+var elasticsearch = require('elasticsearch'),
   conf = require('./config'),
   fbutil = require('./lib/fbutil'),
   PathMonitor = require('./lib/PathMonitor'),
@@ -23,10 +23,22 @@ for (var attrname in conf.ES_OPTS) {
 }
 
 // connect to ElasticSearch
-var esc = new ElasticSearch.Client(escOptions);
+var esc = new elasticsearch.Client(escOptions);
 
-console.log('Connected to ElasticSearch host %s:%s'.grey, conf.ES_HOST, conf.ES_PORT);
+console.log('Connecting to ElasticSearch host %s:%s'.grey, conf.ES_HOST, conf.ES_PORT);
 
-fbutil.init(conf.FB_URL, conf.FB_SERVICEACCOUNT);
-PathMonitor.process(esc, conf.paths, conf.FB_PATH);
-SearchQueue.init(esc, conf.FB_REQ, conf.FB_RES, conf.CLEANUP_INTERVAL);
+
+var timeoutObj = setInterval(function() {
+  esc.ping()
+    .then(function() {
+      console.log('Connected to ElasticSearch host %s:%s'.grey, conf.ES_HOST, conf.ES_PORT);
+      clearInterval(timeoutObj);
+      initFlashlight();
+    });
+}, 5000);
+
+function initFlashlight() {
+  fbutil.init(conf.FB_URL, conf.FB_SERVICEACCOUNT);
+  PathMonitor.process(esc, conf.paths, conf.FB_PATH);
+  SearchQueue.init(esc, conf.FB_REQ, conf.FB_RES, conf.CLEANUP_INTERVAL);
+}
